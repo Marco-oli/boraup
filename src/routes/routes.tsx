@@ -2,7 +2,12 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { LoginScreen } from "../screens/LoginScreen";
 import { UserInfoScreen } from "../screens/UserInfoScreen";
 
-const Stack = createNativeStackNavigator();
+export type RootStackParamList = {
+  Login: undefined;
+  UserInfo: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const Routes = () => {
   return (
