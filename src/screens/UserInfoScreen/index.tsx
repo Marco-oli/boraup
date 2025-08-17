@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { CustomText } from "../../components/CustomText";
 import { colors } from "../../assets/colors";
@@ -13,36 +13,33 @@ export const UserInfoScreen = () => {
   const { user, setUser, logout } = useAuthStore();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchUser = useCallback(async () => {
-    console.log("fetching user");
     try {
       const data = await getUserInfo();
       setUser(data);
     } catch (error) {
+      logout();
+      if (intervalRef.current) clearInterval(intervalRef.current);
       console.log("Erro ao buscar usuário:", error);
     }
   }, []);
 
   useEffect(() => {
-    const checkUser = async () => {
-      try {
-        await fetchUser();
-      } catch {
-        logout();
-        navigation.navigate("Login");
-      }
-    };
+    fetchUser();
+    intervalRef.current = setInterval(fetchUser, 5000);
 
-    checkUser();
-    const interval = setInterval(checkUser, 5000);
-    return () => clearInterval(interval);
-  }, [fetchUser, logout, navigation]);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [fetchUser]);
 
   const handleLogout = useCallback(() => {
     logout();
+    if (intervalRef.current) clearInterval(intervalRef.current);
     navigation.navigate("Login");
-  }, [logout]);
+  }, [logout, navigation]);
 
   if (!user) {
     return (
